@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+
+  nginx:
+    container_name: nginx
+    build:
+      context: nginx
+    networks:
+      - node-network
+    tty: true
+    ports: 
+      - "8080:80"
+
+  app:
+    container_name: node
+    entrypoint: dockerize -wait tcp://mysql-db:3306 -timeout 10s node index.js
+    build:
+      context: node
+    networks:
+      - node-network
+    tty: true
+
+  mysql-db:
+    image: mysql:5.7
+    command: --innodb-use-native-aio=0
+    container_name: mysql-db
+    tty: true
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=peopledb
+      - MYSQL_ROOT_PASSWORD=root
+    networks:
+      - node-network
+
+  
+networks:
+  node-network:
+    driver: bridge
