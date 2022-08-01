@@ -26,11 +26,11 @@ services:
     command: --innodb-use-native-aio=0
     container_name: mysql-db
     tty: true
-    volumes:
-      - ./mysql:/var/lib/mysql
     environment:
       - MYSQL_DATABASE=peopledb
       - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - ./mysql/volume:/var/lib/mysql
     networks:
       - node-network
 

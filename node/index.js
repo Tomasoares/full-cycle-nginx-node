@@ -1,6 +1,6 @@
-const express = require('express');
-const app = express();
-const port = 3000;
+const express = require('express')
+const app = express()
+const port = 3000
 
 console.log("Node Running!")
 
@@ -9,32 +9,48 @@ const config = {
     user: 'root',
     password: 'root',
     database: 'peopledb'
-};
+}
 
 const insertNewPerson = () => {
-    executeQuery(`INSERT INTO people(name) values ('Tomás')`);
-};
+    console.log("Inserindo nova pessoa")
+    executeQuery(`INSERT INTO people(name) values ('Tomas')`);
+}
 
-const selectNamesFromPeople = () => {
-    executeQuery(`SELECT name FROM people`)
-};
+const createTableIfNotExist = () => {
+    console.log("Criando tabela de pessoas se não existir")
+    executeQuery("CREATE table if not exists people (id int auto_increment, name varchar(255), primary key (id))")
+}
 
-const executeQuery = (sql) => {
+const selectNamesFromPeople = (callback) => {
+    console.log("Pesquisando pessoas inseridas")
+    return executeQuery(`SELECT name FROM people`, callback)
+}
+
+const executeQuery = async function(sql, callback) {
     try {
-        const mysql = require('mysql');
-        const connection = mysql.createConnection(config);
+        const mysql = require('mysql')
+        const connection = mysql.createConnection(config)
         
-        connection.query(sql);
-        connection.end();
+        const result = await connection.query(sql, callback)
+        connection.end()
+        return result
+
     } catch (e) {
-        console.log("Error with DB");
+        console.log("Error with DB")
+        return null
     }
 }
 
-insertNewPerson();
+createTableIfNotExist()
+insertNewPerson()
 
-app.get('/', (_, res) => {
-    res.send('<h1>Full Cycle</h1><h2>- Lista de nomes cadastrada no banco de dados.</h2>')
+const header = '<h1>Full Cycle</h1><h2>- Lista de nomes cadastrada no banco de dados.</h2>'
+
+app.get('/', (_, res) => {let names;
+    selectNamesFromPeople((_, result) => { 
+        const names = result.map(v => `<p>${v.name}</p>`).join("")
+        res.send(header + names)
+    })
 });
 
 app.listen(port, () => {
